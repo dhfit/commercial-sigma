@@ -1,13 +1,12 @@
 import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 function createPrisma() {
-  const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const connectionString = process.env.DATABASE_URL!;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new PrismaClient({ adapter: new PrismaLibSql({ url, ...(authToken ? { authToken } : {}) }) } as any);
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString }) } as any);
 }
 
 export const prisma: PrismaClient = globalForPrisma.prisma ?? createPrisma();
