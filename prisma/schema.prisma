@@ -1,0 +1,150 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../app/generated/prisma"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Property {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  address      String
+  city         String
+  province     String  @default("ON")
+  postalCode   String?
+  lat          Float
+  lng          Float
+  neighborhood String?
+  submarket    String?
+
+  propertyType    String
+  propertySubtype String?
+  zoning          String?
+  buildingSize    Int
+  lotSize         Int?
+  yearBuilt       Int?
+  numFloors       Int?
+  numUnits        Int?
+  parkingSpaces   Int?
+  loadingDocks    Int?
+  clearHeight     Int?
+
+  status       String
+  askingPrice  Float?
+  soldPrice    Float?
+  soldDate     DateTime?
+  listedDate   DateTime?
+  daysOnMarket Int?
+
+  noi               Float?
+  capRate           Float?
+  grm               Float?
+  pricePerSqFt      Float?
+  grossRevenue      Float?
+  operatingExpenses Float?
+  vacancyRate       Float?
+  taxesAnnual       Float?
+
+  description      String?
+  highlights       String?
+  images           String   @default("[]")
+  mlsNumber        String?
+  listingBrokerage String?
+
+  tenants      Tenant[]
+  priceHistory PriceHistory[]
+  savedBy      SavedProperty[]
+}
+
+model Tenant {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  name                 String
+  industry             String?
+  leaseType            String?
+  leaseStart           DateTime?
+  leaseExpiry          DateTime?
+  rentPerSqFt          Float?
+  squareFeet           Int?
+  percentageOfBuilding Float?
+  creditRating         String?
+}
+
+model PriceHistory {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  price     Float
+  date      DateTime
+  priceType String
+  notes     String?
+}
+
+model MarketData {
+  id           String @id @default(cuid())
+  city         String
+  propertyType String
+  period       String
+
+  avgCapRate      Float?
+  avgPricePerSqFt Float?
+  totalVolume     Float?
+  numTransactions Int?
+  avgDaysOnMarket Int?
+  vacancyRate     Float?
+  yoyPriceChange  Float?
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?
+  name      String?
+  company   String?
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+
+  savedProperties SavedProperty[]
+  savedSearches   SavedSearch[]
+  alerts          Alert[]
+}
+
+model SavedProperty {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  savedAt    DateTime @default(now())
+  notes      String?
+
+  @@unique([userId, propertyId])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  filters   String
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String
+  criteria      String
+  lastTriggered DateTime?
+  createdAt     DateTime  @default(now())
+  active        Boolean   @default(true)
+}
